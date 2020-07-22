@@ -8,14 +8,14 @@ function Users() {
       name: "do",
       image:
         "https://image.shutterstock.com/image-photo/cropped-image-handsome-young-man-600w-708732331.jpg",
-      places: 3,
+      places: 2,
     },
     {
       id: "15",
       name: "doooo",
       image:
         "https://image.shutterstock.com/image-photo/broun-dog-dachshund-sun-glasses-260nw-1660171375.jpg",
-      places: 5,
+      places: 0,
     },
   ];
   return <UsersList items={USERS} />;
