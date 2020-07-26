@@ -1,29 +1,26 @@
 const express = require("express");
+const bodyParser = require("body-parser");
+
+const placesRoutes = require("./routes/places-routes");
+const HttpError = require("./model/http-error");
 
 const app = express();
 
-app.use((req, res, next) => {
-  let body = "";
-  req.on("end", () => {
-    const userName = body.split("=")[1];
-    if (userName) {
-      req.body = { name: userName };
-    }
-    next();
-  });
-  req.on("data", (chunk) => {
-    body += chunk;
-  });
+app.use(bodyParser.json());
+
+app.use("/api/places", placesRoutes); // => /api/places/....
+
+app.use((res, req, next) => {
+  const error = new HttpError("Could not find this route", 404);
+  return next(error);
 });
 
-app.use((req, res, next) => {
-  if (req.body) {
-    return res.send("<h1>" + req.body.name + "</h1>");
+app.use((error, req, res, next) => {
+  if (res.headerSent) {
+    return next(error);
   }
-  res.send(
-    '<form method="POST"><input type="text" name="username"><button type="submit">Create User</button></form>'
-  );
-});
+  res.status(error.code || 500);
+  res.json({ message: error.message || "An unknown error occured!" });
+}); // error middleware 4args
 
 app.listen(5000);
-bgfvbf;
