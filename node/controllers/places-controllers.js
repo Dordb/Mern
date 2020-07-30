@@ -2,73 +2,45 @@ const { v4: uuidv4 } = require("uuid");
 const { validationResult } = require("express-validator");
 
 const HttpError = require("../model/http-error");
+const Place = require("../model/place");
 
-const DUMMY_PLACES = [
-  {
-    id: "place1",
-    title: "Tour 5",
-    description: "Une Tour 5",
-    imageUrl:
-      "https://www.sortiraparis.com/images/80/83517/438334-visuel-paris-tour-eiffel-19.jpg",
-    address: "5st rue de la pls",
-    location: {
-      lat: 40.7808,
-      lng: -73.9772,
-    },
-    creator: "5",
-  },
-  {
-    id: "place30",
-    title: "Basment 0",
-    description: "Un Basment",
-    imageUrl:
-      "https://www.basementwaterproofingetc.com/images/contemporary-basement.jpg",
-    address: "Piiiilolloolo",
-    location: {
-      lat: 40,
-      lng: 0,
-    },
-    creator: "5",
-  },
-  {
-    id: "p1",
-    title: "Basment zzzz",
-    description: "Un Basment zzz",
-    imageUrl:
-      "https://www.basementwaterproofingetc.com/images/contemporary-basement.jpg",
-    address: "Piiiilolloolo zzzz",
-    location: {
-      lat: 40,
-      lng: 0,
-    },
-    creator: "1",
-  },
-];
-
-function getPlaceById(req, res, next) {
+async function getPlaceById(req, res, next) {
   // !!!  if pid === user dans le cas d'un '/user/' ordre compte
   const placeId = req.params.pid;
-  const place = DUMMY_PLACES.find((p) => {
-    return p.id === placeId;
-  });
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    return next(new Error("Something went wrong, could not find place", 404));
+  }
+
   if (!place) {
     return next(new Error("Error not place found for place id", 404));
   }
-  res.json({ place }); // => { place } => {place: place}
+
+  res.json({ place: place.toObject({ getters: true }) }); // => { place } => {place: place}
 }
 
-function getPlacesByUserId(req, res, next) {
+async function getPlacesByUserId(req, res, next) {
   const userId = req.params.uid;
-  const place = DUMMY_PLACES.filter((p) => {
-    return p.creator === userId;
-  });
-  if (place.length === 0) {
-    return next(new Error("Error not place found for user id", 404));
+  let places;
+  try {
+    places = await Place.find({ creator: userId });
+  } catch (err) {
+    return next(new Error("Something went wrong, could not find user", 404));
   }
-  res.json({ place }); // => { place } => { place: place }
+
+  if (places.length === 0) {
+    return next(new Error("Error place not found for user id", 404));
+  }
+
+  res.json({
+    places: places.map((place) => place.toObject({ getters: true })),
+  });
+  // => { place } => { place: place }
 }
 
-function createPlace(req, res, next) {
+async function createPlace(req, res, next) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return next(
@@ -76,19 +48,26 @@ function createPlace(req, res, next) {
     );
   }
   const { title, description, coordinates, address, creator } = req.body;
-  const createdPlace = {
-    id: uuidv4(),
+  const createdPlace = new Place({
     title,
     description,
     location: coordinates,
     address,
+    image:
+      "https://www.sortiraparis.com/images/80/83517/438334-visuel-paris-tour-eiffel-19.jpg",
     creator,
-  };
-  DUMMY_PLACES.push(createdPlace);
+  });
+
+  try {
+    await createdPlace.save();
+  } catch (err) {
+    const error = new HttpError("Creating place failed", 500);
+    return next(error);
+  }
   res.status(201).json({ place: createdPlace });
 }
 
-function updatePlace(req, res, next) {
+async function updatePlace(req, res, next) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     console.log(errors);
@@ -96,22 +75,33 @@ function updatePlace(req, res, next) {
   }
   const { title, description } = req.body;
   const placeId = req.params.pid;
-  const updatedPlace = { ...DUMMY_PLACES.find((p) => p.id === placeId) };
-  const index = DUMMY_PLACES.findIndex((p) => p.id === placeId);
-  updatedPlace.title = title;
-  updatedPlace.description = description;
-  DUMMY_PLACES.splice(index, 1, updatedPlace);
-  res.status(200).json({ place: updatedPlace });
+
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    return next(new HttpError("Find place failed", 500));
+  }
+
+  place.title = title;
+  place.description = description;
+
+  try {
+    await place.save();
+  } catch (err) {
+    return next(new HttpError("Updating place failed", 500));
+  }
+  res.status(201).json({ place: place.toObject({ getters: true }) });
 }
 
-function deletePlace(req, res, next) {
+async function deletePlace(req, res, next) {
   const placeId = req.params.pid;
-
-  const index = DUMMY_PLACES.findIndex((p) => p.id === placeId);
-  if (index < 0) {
-    return next(HttpError("*** Place not found ***", 404));
+  try {
+    await Place.findById(placeId).deleteOne();
+  } catch (err) {
+    return next(new HttpError("Delete fail could not find place", 500));
   }
-  DUMMY_PLACES.splice(index, 1);
+
   res.status(200).json({ message: "** Deleted Place **" });
 }
 

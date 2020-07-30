@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 
 const placesRoutes = require("./routes/places-routes");
 const HttpError = require("./model/http-error");
@@ -24,4 +25,14 @@ app.use((error, req, res, next) => {
   res.json({ message: error.message || "An unknown error occured!" });
 }); // error middleware 4args
 
-app.listen(5000);
+mongoose
+  .connect(
+    "mongodb+srv://dorx:Po1NntCO0YlgIXGE@cluster0.ddgdu.mongodb.net/mern?retryWrites=true&w=majority",
+    { useNewUrlParser: true, useUnifiedTopology: true }
+  )
+  .then(() => {
+    app.listen(5000);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
