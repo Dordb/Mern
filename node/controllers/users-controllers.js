@@ -22,7 +22,7 @@ async function signup(req, res, next) {
       new HttpError("Invalid inputs passed to signup, check your data", 422)
     );
   }
-  const { name, email, password, places } = req.body;
+  const { name, email, password } = req.body;
 
   let existingUser;
   try {
@@ -40,7 +40,7 @@ async function signup(req, res, next) {
     email,
     image: "URL imag",
     password,
-    places,
+    places: [],
   });
 
   try {

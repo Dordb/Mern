@@ -1,8 +1,10 @@
 const { v4: uuidv4 } = require("uuid");
 const { validationResult } = require("express-validator");
+const mongoose = require("mongoose");
 
 const HttpError = require("../model/http-error");
 const Place = require("../model/place");
+const User = require("../model/user");
 
 async function getPlaceById(req, res, next) {
   // !!!  if pid === user dans le cas d'un '/user/' ordre compte
@@ -58,11 +60,31 @@ async function createPlace(req, res, next) {
     creator,
   });
 
+  let user;
   try {
-    await createdPlace.save();
+    user = await User.findById(creator);
   } catch (err) {
-    const error = new HttpError("Creating place failed", 500);
-    return next(error);
+    return next(new HttpError("Creating place failed.", 500));
+  }
+
+  if (!user) {
+    return next(new HttpError("User not find.", 404));
+  }
+
+  try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await createdPlace.save({
+      /*session*/
+    });
+    user.places.push(createdPlace);
+    await user.save({
+      /*session*/
+    });
+    await session.commitTransaction();
+  } catch (err) {
+    console.log(err);
+    return next(new HttpError("Creating place failed", 500));
   }
   res.status(201).json({ place: createdPlace });
 }
