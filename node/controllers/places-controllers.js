@@ -109,7 +109,6 @@ async function updatePlace(req, res, next) {
   }
   place.title = title;
   place.description = description;
-
   try {
     await place.save();
   } catch (err) {
