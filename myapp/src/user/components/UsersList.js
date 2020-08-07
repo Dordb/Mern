@@ -6,7 +6,7 @@ import Card from "../../shared/components/UIElements/Card";
 import "./UsersList.css";
 
 function UsersList(props) {
-  if (props.items.length === 0) {
+  if (!props.items || props.items.length === 0) {
     return (
       <div>
         <Card>
@@ -25,7 +25,7 @@ function UsersList(props) {
             id={user.id}
             image={user.image}
             name={user.name}
-            placeCount={user.places}
+            placeCount={user.places.length}
           />
         );
       })}

@@ -1,36 +1,34 @@
 import React from "react";
 import PlaceList from "../components/PlaceList";
 import { useParams } from "react-router-dom";
-
 const DUMMY_PLACES = [
   {
-    id: "place1",
-    title: "Tour 5",
-    description: "Une Tour 5",
+    id: "p1",
+    title: "Empire State Building",
+    description: "One of the most famous sky scrapers in the world!",
     imageUrl:
-      "https://www.sortiraparis.com/images/80/83517/438334-visuel-paris-tour-eiffel-19.jpg",
-    address: "5st rue de la pls",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/NYC_Empire_State_Building.jpg/640px-NYC_Empire_State_Building.jpg",
+    address: "20 W 34th St, New York, NY 10001",
     location: {
-      lat: 40.7808,
-      lng: -73.9772,
+      lat: 40.7484405,
+      lng: -73.9878584,
     },
-    creator: "5",
+    creator: "u1",
   },
   {
-    id: "place30",
-    title: "Basment 0",
-    description: "Un Basment",
+    id: "p2",
+    title: "Emp. State Building",
+    description: "One of the most famous sky scrapers in the world!",
     imageUrl:
-      "https://www.basementwaterproofingetc.com/images/contemporary-basement.jpg",
-    address: "Piiiilolloolo",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/NYC_Empire_State_Building.jpg/640px-NYC_Empire_State_Building.jpg",
+    address: "20 W 34th St, New York, NY 10001",
     location: {
-      lat: 40,
-      lng: 0,
+      lat: 40.7484405,
+      lng: -73.9878584,
     },
-    creator: "5",
+    creator: "u2",
   },
 ];
-
 function UserPlaces(props) {
   const userId = useParams().userId;
   const loadedPlaces = DUMMY_PLACES.filter((place) => place.creator === userId);

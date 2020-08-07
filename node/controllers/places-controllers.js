@@ -41,22 +41,26 @@ async function getPlacesByUserId(req, res, next) {
   });
   // => { place } => { place: place }
 }
-
-async function createPlace(req, res, next) {
+const createPlace = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return next(
-      HttpError("Invalid inputs passed, please check your data.", 422)
+      new HttpError("Invalid inputs passed, please check your data.", 422)
     );
   }
-  const { title, description, coordinates, address, creator } = req.body;
+
+  const { title, description, address, creator } = req.body;
+
   const createdPlace = new Place({
     title,
     description,
-    location: coordinates,
     address,
+    location: {
+      lat: 10,
+      lng: 5,
+    },
     image:
-      "https://www.sortiraparis.com/images/80/83517/438334-visuel-paris-tour-eiffel-19.jpg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Empire_State_Building_%28aerial_view%29.jpg/400px-Empire_State_Building_%28aerial_view%29.jpg", // => File Upload module, will be replaced with real image url
     creator,
   });
 
@@ -64,30 +68,37 @@ async function createPlace(req, res, next) {
   try {
     user = await User.findById(creator);
   } catch (err) {
-    return next(new HttpError("Creating place failed.", 500));
+    const error = new HttpError(
+      "Creating place failed, please try again.",
+      500
+    );
+    return next(error);
   }
 
   if (!user) {
-    return next(new HttpError("User not find.", 404));
+    const error = new HttpError("Could not find user for provided id.", 404);
+    return next(error);
   }
 
+  console.log(user);
+
   try {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    await createdPlace.save({
-      /*session*/
-    });
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await createdPlace.save({ session: sess });
     user.places.push(createdPlace);
-    await user.save({
-      /*session*/
-    });
-    await session.commitTransaction();
+    await user.save({ session: sess });
+    await sess.commitTransaction();
   } catch (err) {
-    console.log(err);
-    return next(new HttpError("Creating place failed", 500));
+    const error = new HttpError(
+      "Creating place failed, please try again.",
+      500
+    );
+    return next(error);
   }
+
   res.status(201).json({ place: createdPlace });
-}
+};
 
 async function updatePlace(req, res, next) {
   const errors = validationResult(req);

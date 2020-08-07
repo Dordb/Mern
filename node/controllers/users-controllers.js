@@ -66,7 +66,10 @@ async function login(req, res, next) {
     return next(new HttpError("Logging in failed, wrong email/pwd", 500));
   }
 
-  res.json({ message: "Logged In!" });
+  res.json({
+    message: "Logged In!",
+    user: existingUser.toObject({ getters: true }),
+  });
 }
 
 exports.getUsers = getUsers;
