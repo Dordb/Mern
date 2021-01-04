@@ -49,7 +49,6 @@ const createPlace = async (req, res, next) => {
     );
   }
 
-const app
   const { title, description, address, creator } = req.body;
   const createdPlace = new Place({
     title,
